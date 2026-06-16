@@ -28,7 +28,7 @@ export default async function NotebooksPage() {
   const entries = manifest.notebooks.filter((n) => n.status === "ok");
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100">
+    <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 print:bg-white">
       <Header
         institution={manifestMart.institution.name}
         generatedAt={manifestMart.generatedAt}
@@ -36,8 +36,8 @@ export default async function NotebooksPage() {
         halTotal={manifestMart.sources.hal.total}
       />
 
-      <main className="mx-auto max-w-7xl px-6 py-8">
-        <div className="mb-6">
+      <main className="mx-auto max-w-7xl px-6 py-8 print:max-w-none print:p-0">
+        <div className="mb-6 print:hidden">
           <p className="text-xs font-medium uppercase tracking-widest text-brand-500">
             Data Science &amp; Data Engineering
           </p>

@@ -7,7 +7,7 @@ import { CodeCell } from "./cells/CodeCell";
 /** Rend un notebook complet, cellule par cellule (look Google Colab). */
 export function NotebookViewer({ notebook }: { notebook: Notebook }) {
   return (
-    <div className="divide-y divide-slate-100 dark:divide-slate-800">
+    <div className="nb-viewer divide-y divide-slate-100 dark:divide-slate-800">
       {notebook.cells.map((cell, i) => {
         const source = joinSource(cell.source);
         if (cell.cell_type === "markdown") {

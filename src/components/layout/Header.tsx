@@ -28,7 +28,7 @@ const NAV: Array<{ href: string; label: string; icon?: keyof typeof ICONS }> = [
 /** Sticky institutional header: UGA logo, provenance badges and section nav. */
 export function Header({ institution, generatedAt, openAlexTotal, halTotal }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 bg-gradient-to-b from-brand-800 to-brand-900 text-white shadow-lg shadow-brand-900/20">
+    <header className="sticky top-0 z-30 bg-gradient-to-b from-brand-800 to-brand-900 text-white shadow-lg shadow-brand-900/20 print:hidden">
       {/* Liseré orange — rappel de l'accent du logo UGA. */}
       <div className="h-1 bg-gradient-to-r from-uga-orange via-uga-orange/70 to-transparent" />
 

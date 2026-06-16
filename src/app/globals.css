@@ -61,3 +61,19 @@ html.dark *::-webkit-scrollbar-thumb {
 .animate-fade-in-up {
   animation: fade-in-up 0.4s ease-out both;
 }
+
+/* Export PDF d'un notebook : page propre, sans habillage du dashboard.
+   Seul le contenu du notebook est imprimé ; on évite de couper les cellules. */
+@media print {
+  html,
+  body {
+    background: #fff !important;
+  }
+  .nb-viewer > * {
+    break-inside: avoid;
+  }
+  .nb-viewer pre,
+  .nb-viewer img {
+    break-inside: avoid;
+  }
+}

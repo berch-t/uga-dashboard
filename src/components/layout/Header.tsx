@@ -1,3 +1,5 @@
+import Image from "next/image";
+import { BookOpen, Compass } from "lucide-react";
 import { formatDate, formatInt } from "@/lib/format";
 import { ThemeToggle } from "./ThemeToggle";
 
@@ -8,7 +10,9 @@ interface HeaderProps {
   halTotal: number;
 }
 
-const NAV: Array<{ href: string; label: string; emphasis?: boolean }> = [
+const ICONS = { notebooks: BookOpen, explore: Compass } as const;
+
+const NAV: Array<{ href: string; label: string; icon?: keyof typeof ICONS }> = [
   { href: "/#overview", label: "Vue d'ensemble" },
   { href: "/#production", label: "Production" },
   { href: "/#impact", label: "Impact" },
@@ -17,50 +21,85 @@ const NAV: Array<{ href: string; label: string; emphasis?: boolean }> = [
   { href: "/#contracts", label: "Contrats" },
   { href: "/#quality", label: "Qualité des données" },
   { href: "/#explorer", label: "Explorateur" },
-  { href: "/notebooks", label: "Notebooks", emphasis: true },
-  { href: "/explore", label: "Navigateur d'API", emphasis: true },
+  { href: "/notebooks", label: "Notebooks", icon: "notebooks" },
+  { href: "/explore", label: "Navigateur d'API", icon: "explore" },
 ];
 
-/** Sticky institutional header with provenance badges and section nav. */
+/** Sticky institutional header: UGA logo, provenance badges and section nav. */
 export function Header({ institution, generatedAt, openAlexTotal, halTotal }: HeaderProps) {
   return (
-    <header className="sticky top-0 z-30 border-b border-brand-700/30 bg-brand-900 text-white shadow-sm">
-      <div className="mx-auto max-w-7xl px-6 py-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <p className="text-xs font-medium uppercase tracking-widest text-brand-100/70">
-              Système d&apos;information décisionnel · Recherche
-            </p>
-            <h1 className="mt-1 text-lg font-semibold leading-tight sm:text-xl">
-              Pilotage de la production scientifique
-            </h1>
-            <p className="text-sm text-brand-100/80">{institution}</p>
+    <header className="sticky top-0 z-30 bg-gradient-to-b from-brand-800 to-brand-900 text-white shadow-lg shadow-brand-900/20">
+      {/* Liseré orange — rappel de l'accent du logo UGA. */}
+      <div className="h-1 bg-gradient-to-r from-uga-orange via-uga-orange/70 to-transparent" />
+
+      <div className="mx-auto max-w-7xl px-4 sm:px-6">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3 py-3.5">
+          {/* Bloc identité : logo + intitulé */}
+          <div className="flex items-center gap-3 sm:gap-4">
+            <a
+              href="/#overview"
+              aria-label={`${institution} — accueil`}
+              className="shrink-0 rounded-xl bg-white p-2 shadow-sm ring-1 ring-black/5 transition hover:shadow-md sm:p-2.5"
+            >
+              <Image
+                src="/logo_uga.png"
+                alt={institution}
+                width={64}
+                height={39}
+                priority
+                className="h-8 w-auto sm:h-9"
+              />
+            </a>
+
+            <span className="hidden h-10 w-px bg-white/15 sm:block" aria-hidden="true" />
+
+            <div>
+              <p className="flex items-center gap-1.5 text-[11px] font-medium uppercase tracking-[0.18em] text-brand-100/70">
+                <span className="inline-block h-1.5 w-1.5 rounded-full bg-uga-orange" aria-hidden="true" />
+                SI décisionnel · Recherche
+              </p>
+              <h1 className="mt-0.5 text-base font-semibold leading-tight sm:text-xl">
+                Pilotage de la production scientifique
+              </h1>
+            </div>
           </div>
-          <div className="flex flex-col items-end gap-2 text-right">
+
+          {/* Bloc méta : thème, sources, fraîcheur */}
+          <div className="flex flex-col items-end gap-2">
             <div className="flex flex-wrap items-center justify-end gap-2">
               <ThemeToggle />
-              <Badge>OpenAlex · {formatInt(openAlexTotal)} publications</Badge>
-              <Badge>HAL · {formatInt(halTotal)} dépôts</Badge>
+              <Badge>OpenAlex · {formatInt(openAlexTotal)}</Badge>
+              <Badge>HAL · {formatInt(halTotal)}</Badge>
             </div>
-            <p className="text-xs text-brand-100/60">
+            <p className="flex items-center gap-1.5 text-xs text-brand-100/60">
+              <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
+                <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
+              </span>
               Données réelles · instantané du {formatDate(generatedAt)}
             </p>
           </div>
         </div>
-        <nav className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-xs text-brand-100/80">
-          {NAV.map((item) => (
-            <a
-              key={item.href}
-              href={item.href}
-              className={
-                item.emphasis
-                  ? "rounded-full bg-white/15 px-2 py-0.5 font-medium text-white ring-1 ring-inset ring-white/25 transition hover:bg-white/25"
-                  : "transition hover:text-white"
-              }
-            >
-              {item.label}
-            </a>
-          ))}
+
+        {/* Navigation */}
+        <nav className="flex flex-wrap items-center gap-1 border-t border-white/10 py-2">
+          {NAV.map((item) => {
+            const Icon = item.icon ? ICONS[item.icon] : null;
+            return (
+              <a
+                key={item.href}
+                href={item.href}
+                className={
+                  Icon
+                    ? "inline-flex items-center gap-1.5 rounded-lg bg-white/10 px-3 py-1.5 text-xs font-semibold text-white ring-1 ring-inset ring-white/20 transition hover:bg-white/20"
+                    : "rounded-lg px-3 py-1.5 text-xs font-medium text-brand-100/80 transition hover:bg-white/10 hover:text-white"
+                }
+              >
+                {Icon ? <Icon className="h-3.5 w-3.5" aria-hidden="true" /> : null}
+                {item.label}
+              </a>
+            );
+          })}
         </nav>
       </div>
     </header>

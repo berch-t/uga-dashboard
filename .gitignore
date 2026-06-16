@@ -42,3 +42,4 @@ phase_2.md
 # Raw API snapshots (heavy, reproducible via `npm run pipeline`).
 # The committed data marts in /data/marts are kept; raw dumps are not.
 /data/raw
+.gstack/

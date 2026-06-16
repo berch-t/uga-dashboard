@@ -26,7 +26,12 @@ const config: Config = {
           500: "#1f5fa8",
           600: "#194e8c",
           700: "#143d6e",
+          800: "#103155",
           900: "#0c2542",
+        },
+        // UGA secondary accent (orange du logo).
+        uga: {
+          orange: "#e8530e",
         },
         // tremor light theme tokens
         tremor: {

@@ -9,13 +9,19 @@ BRAND = "#2563eb"
 ACCENT = "#10b981"
 PALETTE = ["#2563eb", "#10b981", "#f59e0b", "#ef4444", "#8b5cf6", "#06b6d4", "#ec4899"]
 
+# Résolution élevée par défaut (figures nettes à l'écran ET à l'export PDF),
+# appliquée dès l'import — quel que soit l'ordre d'appel à `apply_style`.
+mpl.rcParams["figure.dpi"] = 150
+mpl.rcParams["savefig.dpi"] = 150
+mpl.rcParams["savefig.bbox"] = "tight"
+
 
 def apply_style() -> None:
     """Applique un thème sobre et lisible, identité visuelle du dashboard."""
     mpl.rcParams.update(
         {
             "figure.figsize": (9, 4.5),
-            "figure.dpi": 110,
+            "figure.dpi": 150,
             "axes.spines.top": False,
             "axes.spines.right": False,
             "axes.grid": True,

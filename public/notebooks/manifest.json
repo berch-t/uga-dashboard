@@ -1,0 +1,68 @@
+{
+  "generatedAt": "2026-06-16T11:38:12.898788+00:00",
+  "notebooks": [
+    {
+      "id": "01_eda_corpus",
+      "title": "Analyse exploratoire du corpus",
+      "category": "Data Science",
+      "file": "01_eda_corpus.ipynb",
+      "status": "ok"
+    },
+    {
+      "id": "02_ingestion_api",
+      "title": "Ingestion d'API & nouvelle source",
+      "category": "Data Engineering",
+      "file": "02_ingestion_api.ipynb",
+      "status": "ok"
+    },
+    {
+      "id": "03_reconciliation_qualite",
+      "title": "Réconciliation & qualité",
+      "category": "Data Engineering",
+      "file": "03_reconciliation_qualite.ipynb",
+      "status": "ok"
+    },
+    {
+      "id": "04_topic_modeling",
+      "title": "Topic modeling (embeddings)",
+      "category": "Data Science",
+      "file": "04_topic_modeling.ipynb",
+      "status": "ok"
+    },
+    {
+      "id": "05_bibliometrie_impact",
+      "title": "Bibliométrie & impact",
+      "category": "Data Science",
+      "file": "05_bibliometrie_impact.ipynb",
+      "status": "ok"
+    },
+    {
+      "id": "06_reseau_collaboration",
+      "title": "Réseau de collaboration",
+      "category": "Data Science",
+      "file": "06_reseau_collaboration.ipynb",
+      "status": "ok"
+    },
+    {
+      "id": "07_series_temporelles_prevision",
+      "title": "Séries temporelles & prévision",
+      "category": "Data Science",
+      "file": "07_series_temporelles_prevision.ipynb",
+      "status": "ok"
+    },
+    {
+      "id": "08_scaling_polars_duckdb",
+      "title": "Montée à l'échelle (polars/duckdb)",
+      "category": "Data Engineering",
+      "file": "08_scaling_polars_duckdb.ipynb",
+      "status": "ok"
+    },
+    {
+      "id": "09_pipeline_data_contracts",
+      "title": "Pipeline & data contracts",
+      "category": "Data Engineering",
+      "file": "09_pipeline_data_contracts.ipynb",
+      "status": "ok"
+    }
+  ]
+}

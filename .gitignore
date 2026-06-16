@@ -1,0 +1,44 @@
+# Dependencies
+/node_modules
+/.pnp
+.pnp.js
+
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+
+# Production
+/build
+
+# Misc
+.DS_Store
+*.pem
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Development
+.claude/
+PLAN.md
+CLAUDE.md
+phase_2.md
+
+# Local env files
+.env
+.env*.local
+
+# Vercel
+.vercel
+
+# TypeScript
+*.tsbuildinfo
+
+# Test coverage
+/coverage
+
+# Raw API snapshots (heavy, reproducible via `npm run pipeline`).
+# The committed data marts in /data/marts are kept; raw dumps are not.
+/data/raw

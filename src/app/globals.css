@@ -1,0 +1,63 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f7f8fa;
+  --foreground: #0c2542;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+html.dark {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+html.dark body {
+  background: #020617;
+  color: #e2e8f0;
+}
+
+/* Thin, unobtrusive scrollbars to match the BI aesthetic. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+}
+html.dark * {
+  scrollbar-color: #334155 transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background-color: #cbd5e1;
+  border-radius: 9999px;
+}
+html.dark *::-webkit-scrollbar-thumb {
+  background-color: #334155;
+}
+
+/* Subtle entrance used by KPI cards and panels. */
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.animate-fade-in-up {
+  animation: fade-in-up 0.4s ease-out both;
+}

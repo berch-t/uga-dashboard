@@ -9,8 +9,7 @@ réalisé et comment**. Il accompagne le code et le tableau de bord, et s'adress
 Démontrer la faisabilité d'un pilotage de la production scientifique du site
 Grenoble Alpes à partir des deux API ouvertes de l'offre (HAL et OpenAlex), en
 couvrant l'intégralité de la chaîne : recueil, fiabilisation, modélisation,
-analyse et restitution. La contrainte forte est l'usage **exclusif de données
-réelles**.
+analyse et restitution. La contrainte forte est **la qualité du traitement des données et leur intégration dans un tableau de bord décisionnel**.
 
 ## 2. Données et périmètre
 
@@ -28,7 +27,7 @@ Trois périmètres distincts, tous paramétrés dans `pipeline/config.ts` :
 
 | Corpus | Définition | Usage |
 |---|---|---|
-| Complet | Toutes les publications OpenAlex de l'établissement (140 638) | Indicateurs de tête, agrégats, séries |
+| Complet | Toutes les publications OpenAlex de l'établissement (144 414) | Indicateurs de tête, agrégats, séries |
 | Top-cités | 1 000 publications les plus citées | Indices h / g / i10 |
 | Échantillon | Publications 2022–2024 (jusqu'à 6 000) | Réseau, loi de Lotka, distribution |
 
@@ -36,6 +35,19 @@ La réconciliation compare un échantillon OpenAlex et un échantillon HAL sur l
 même fenêtre (2022–2024). L'instantané est daté dans
 `data/marts/manifest.json` ; relancer `npm run pipeline` régénère l'ensemble de
 façon déterministe (hors évolution naturelle des bases en amont).
+
+### 2.4 Fraîcheur et rafraîchissement (modèle SID)
+
+L'entrepôt (les *data marts*) est **régénéré automatiquement** par un ETL
+planifié (GitHub Actions, cron quotidien — `.github/workflows/refresh-data.yml`)
+qui relance le pipeline et commite les marts ; la restitution reste rapide et à
+jour (< ~24 h). C'est la logique d'un système décisionnel : l'ETL alimente
+l'entrepôt sur une planification, la restitution lit l'entrepôt. Les deux totaux
+du bandeau (OpenAlex, HAL) sont en outre vérifiés **en direct** à chaque
+consultation. Les analyses lourdes (réseau, réconciliation, Lotka) exigeant un
+échantillonnage + calcul de plusieurs minutes, elles ne sont **pas** recalculées
+par requête : c'est précisément le rôle du rafraîchissement planifié. Les chiffres
+cités ci-dessous sont ceux d'un instantané et évoluent à chaque exécution.
 
 ### 2.3 Stratégie d'appels
 
@@ -60,23 +72,26 @@ taille du tableau `group_by` à la valeur de `per-page` (corrigé à 200).
 ### 4.1 h-index (Hirsch, 2005)
 
 Plus grand entier h tel que h publications possèdent chacune au moins h
-citations. Calculé sur le corpus top-cités. **Résultat : h = 495.**
+citations. Calculé sur le corpus top-cités. **Résultat : h = 499.**
 
 ### 4.2 g-index (Egghe, 2006)
 
 Plus grand g tel que les g publications les plus citées cumulent au moins g²
-citations ; plus sensible aux travaux très cités. **Résultat : g = 858.**
+citations ; plus sensible aux travaux très cités. **Résultat : g = 865.**
 
 ### 4.3 i10-index
 
-Nombre de publications avec au moins 10 citations. **Résultat : i10 = 1 000**
-(plancher de l'échantillon top-cités, donc minorant).
+Nombre de publications avec au moins 10 citations, **mesuré sur le corpus
+complet** via l'API (`cited_by_count:>9` → `meta.count`). **Résultat : i10 =
+50 907.** À ne jamais calculer sur le top-cités seul, qui le plafonnerait à la
+taille de la tranche (1 000) ; h et g, eux, convergent sous 1 000, donc le
+top-cités suffit pour eux.
 
 ### 4.4 Loi de Lotka (1926)
 
 Le nombre d'auteurs publiant n articles décroît en 1/nᵃ. On estime l'exposant a
 par régression linéaire (moindres carrés) sur le spectre log-log de
-productivité. **Résultat : a = 2,73 ; R² = 0,95** sur 31 664 auteurs distincts.
+productivité. **Résultat : a = 2,67 ; R² = 0,96** sur 31 697 auteurs distincts.
 Une valeur proche de 2 et un R² élevé confirment l'adéquation du corpus à la loi
 classique, ce qui valide à la fois la donnée et l'implémentation.
 
@@ -98,7 +113,7 @@ co-occurrence sur une même publication. On applique l'optimisation de modularit
 de **Louvain** (Blondel et al., 2008) pour détecter les communautés, puis
 **ForceAtlas2** (Jacomy et al., 2014) pour la disposition, le tout précalculé
 hors-ligne. **Résultat : 120 institutions, 2 600 arêtes, 4 communautés**
-(modularité 0,18, cohérente avec un réseau dense fortement interconnecté).
+(modularité 0,19, cohérente avec un réseau dense fortement interconnecté).
 
 ### 4.7 Réconciliation HAL × OpenAlex (record linkage)
 
@@ -111,7 +126,7 @@ Christen, 2012) :
    sur les ensembles de jetons du titre, au-delà d'un seuil (0,6).
 
 **Résultats** (échantillons 2022–2024, 6 000 notices par source) :
-- 2 092 appariements, dont **2 016 par DOI** et **76 par titre**.
+- 2 092 appariements, dont **2 018 par DOI** et **74 par titre**.
 - 3 908 notices propres à OpenAlex, 3 908 propres à HAL.
 - Indice de recouvrement (Jaccard des ensembles) : ~0,21.
 
@@ -122,11 +137,11 @@ décisionnel plutôt que le choix d'une source unique.
 
 ## 5. Validation
 
-- **Tests unitaires** (Vitest, 16 tests) : valeurs connues pour h/g/i10,
+- **Tests unitaires** (Vitest, 19 tests) : valeurs connues pour h/g/i10,
   récupération de l'exposant de Lotka sur données synthétiques 1/n² (a ∈ [1,6 ;
   2,4], R² > 0,9), détection de rafale sur série à pic, appariement DOI et flou.
-- **Contrôles de cohérence** : l'exposant de Lotka réel (2,73) et l'ajustement
-  (R² = 0,95) sont conformes à la littérature, ce qui constitue une validation
+- **Contrôles de cohérence** : l'exposant de Lotka réel (2,67) et l'ajustement
+  (R² = 0,96) sont conformes à la littérature, ce qui constitue une validation
   croisée donnée × méthode.
 - **TypeScript strict** de bout en bout, build de production vérifié.
 

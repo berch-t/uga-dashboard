@@ -42,7 +42,8 @@ Le tableau de bord couvre, sur le périmètre « production scientifique » de
 l'offre, sept volets :
 
 1. **Vue d'ensemble** : volume de publications, accès ouvert, h-index, et
-   évolutions annuelles (corpus complet : 140 638 publications OpenAlex).
+   évolutions annuelles (corpus complet : ~144 000 publications OpenAlex,
+   rafraîchi automatiquement).
 2. **Composition de la production** : types de documents harmonisés, voies de
    l'accès ouvert, supports et auteurs les plus actifs.
 3. **Impact** : indices bibliométriques (h, g, i10), distribution des citations,
@@ -72,6 +73,10 @@ l'offre, sept volets :
   comme 3ᵉ source, avec contrôle de cohérence (couverture DOI vs OpenAlex) et une
   section **Contrats de recherche financés** (financements compétitifs nationaux
   et européens) couvrant le périmètre valorisation.
+- **Rafraîchissement automatique (ETL planifié)** : un job nocturne régénère
+  l'entrepôt et redéploie ; les totaux du bandeau sont vérifiés en direct. Les
+  données restent à jour sans intervention (voir
+  [Fraîcheur des données](#fraîcheur-des-données-etl-planifié--totaux-en-direct)).
 
 ## Des données 100 % réelles
 
@@ -121,6 +126,33 @@ src/
 **Principe de maintenabilité** : aucun fichier monolithique (tous < ~200 lignes),
 une responsabilité par module, et deux points d'extension déclaratifs (registre
 de KPI et interface `Connector`). Voir [docs/architecture.md](./docs/architecture.md).
+
+### Fraîcheur des données (ETL planifié + totaux en direct)
+
+Le dashboard n'est **pas un instantané figé du passé**. La fraîcheur repose sur
+deux mécanismes complémentaires, calqués sur le fonctionnement réel d'un système
+décisionnel :
+
+- **ETL planifié (le cœur)** : un workflow GitHub Actions
+  ([`.github/workflows/refresh-data.yml`](./.github/workflows/refresh-data.yml))
+  **régénère tout l'entrepôt chaque nuit** (`npm run internal` puis
+  `npm run pipeline`) et commite les marts rafraîchis ; Vercel redéploie
+  automatiquement. La restitution reste **rapide** (lecture de marts versionnés,
+  sans base de données) et **jamais vieille de plus de ~24 h**. C'est
+  précisément la logique d'un SID : l'ETL rafraîchit l'entrepôt sur une
+  planification, la couche de restitution lit l'entrepôt — et non l'inverse.
+- **Totaux en direct** : les deux compteurs OpenAlex et HAL du bandeau sont en
+  plus **revérifiés en temps réel à chaque consultation** (`src/lib/live-totals.ts`),
+  avec repli sur la dernière valeur de l'entrepôt si une API est momentanément
+  injoignable.
+
+**Pourquoi pas un recalcul complet à chaque visite ?** Les analyses qui exigent
+les notices individuelles — graphe de collaboration (Louvain + ForceAtlas2),
+réconciliation par record linkage, loi de Lotka — nécessitent d'échantillonner
+des milliers de notices puis plusieurs minutes de calcul. Les recalculer à
+chaque affichage rendrait la page inutilisable (et dépasserait les limites d'une
+fonction serverless). Le rafraîchissement planifié est la réponse d'ingénierie
+correcte, et celle qu'emploient les vrais entrepôts décisionnels.
 
 ## Démarrage rapide
 
@@ -219,6 +251,15 @@ Définir si besoin les variables `OPENALEX_MAILTO`,
 `NEXT_PUBLIC_INSTITUTION_OPENALEX_ID`, `HAL_STRUCT_ACRONYM`,
 `NEXT_PUBLIC_INSTITUTION_NAME`. Les data marts étant versionnés, aucun service
 externe n'est requis au runtime (hors explorateur live).
+
+### Rafraîchissement automatique des données (GitHub Actions)
+
+Le workflow [`.github/workflows/refresh-data.yml`](./.github/workflows/refresh-data.yml)
+régénère l'entrepôt chaque nuit (cron) et à la demande (*Run workflow*), puis
+commite les marts modifiés — ce qui déclenche un redéploiement Vercel. Prérequis :
+activer GitHub Actions sur le dépôt (permission `contents: write` déjà déclarée
+dans le workflow) ; les variables d'institution/mailto sont optionnelles
+(défauts = UGA) et se règlent dans *Settings → Secrets and variables → Actions*.
 
 ### Google Cloud Platform (Cloud Run)
 

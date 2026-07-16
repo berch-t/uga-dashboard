@@ -21,6 +21,10 @@ import {
   overviewMart, papersMart, reconciliationMart, sourcesMart, topicsMart,
 } from "@/lib/marts";
 
+// Rendu à la demande : le header revérifie les totaux OpenAlex/HAL en direct à
+// chaque consultation (voir src/lib/live-totals.ts), donc pas de pré-rendu figé.
+export const dynamic = "force-dynamic";
+
 export default function DashboardPage() {
   const kpis = buildKpis({ overview: overviewMart, bibliometrics: bibliometricsMart, network: networkMart, authors: authorsMart });
 
@@ -28,9 +32,7 @@ export default function DashboardPage() {
     <div className="min-h-screen bg-slate-50 pb-16 dark:bg-slate-950">
       <Header
         institution={manifestMart.institution.name}
-        generatedAt={manifestMart.generatedAt}
-        openAlexTotal={manifestMart.sources.openAlex.total}
-        halTotal={manifestMart.sources.hal.total}
+        fallbackTotals={{ openAlex: manifestMart.sources.openAlex.total, hal: manifestMart.sources.hal.total }}
       />
 
       <main className="mx-auto max-w-7xl space-y-12 px-6 py-8">
@@ -165,7 +167,9 @@ function Footer({ generatedAt, fullWorks, sampleWindow }: { generatedAt: string;
         </p>
         <p className="mt-4 text-xs text-slate-400">
           Démonstration conçue pour l&apos;Université Grenoble Alpes · Thomas Berchet · MIT License ·
-          instantané pipeline du {new Date(generatedAt).toLocaleDateString("fr-FR")}.
+          données rafraîchies automatiquement chaque nuit par un ETL planifié
+          (dernière génération le {new Date(generatedAt).toLocaleDateString("fr-FR")}) ;
+          totaux OpenAlex/HAL du bandeau vérifiés en direct à chaque consultation.
         </p>
       </div>
     </footer>

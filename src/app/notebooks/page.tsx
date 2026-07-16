@@ -23,6 +23,9 @@ async function loadManifest(): Promise<NotebooksManifest> {
   }
 }
 
+// Header à totaux live (voir src/lib/live-totals.ts) → rendu à la demande.
+export const dynamic = "force-dynamic";
+
 export default async function NotebooksPage() {
   const manifest = await loadManifest();
   const entries = manifest.notebooks.filter((n) => n.status === "ok");
@@ -31,9 +34,7 @@ export default async function NotebooksPage() {
     <div className="min-h-screen bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 print:bg-white">
       <Header
         institution={manifestMart.institution.name}
-        generatedAt={manifestMart.generatedAt}
-        openAlexTotal={manifestMart.sources.openAlex.total}
-        halTotal={manifestMart.sources.hal.total}
+        fallbackTotals={{ openAlex: manifestMart.sources.openAlex.total, hal: manifestMart.sources.hal.total }}
       />
 
       <main className="mx-auto max-w-7xl px-6 py-8 print:max-w-none print:p-0">

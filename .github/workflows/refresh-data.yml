@@ -1,0 +1,64 @@
+name: Refresh research data (ETL planifié)
+
+# Modèle SID : un ETL planifié régénère l'entrepôt (data marts) et le commite.
+# Vercel redéploie automatiquement sur push → le dashboard reste rapide (lecture
+# de marts versionnés) et jamais vieux de plus de ~24 h, sans recalcul lourd par
+# visite. C'est exactement la logique d'un système décisionnel : l'ETL rafraîchit
+# l'entrepôt sur une planification, la restitution lit l'entrepôt.
+
+on:
+  schedule:
+    - cron: "17 3 * * *" # tous les jours ~05:17 Europe/Paris (03:17 UTC)
+  workflow_dispatch: {} # déclenchement manuel depuis l'onglet Actions
+
+concurrency:
+  group: refresh-data
+  cancel-in-progress: false
+
+permissions:
+  contents: write # nécessaire pour committer les marts rafraîchis
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      # Variables optionnelles (valeurs par défaut = UGA). Définissables dans
+      # Settings → Secrets and variables → Actions → Variables.
+      OPENALEX_MAILTO: ${{ vars.OPENALEX_MAILTO || 'demo@uga-dashboard.fr' }}
+      NEXT_PUBLIC_INSTITUTION_OPENALEX_ID: ${{ vars.INSTITUTION_OPENALEX_ID || 'I899635006' }}
+      HAL_STRUCT_ACRONYM: ${{ vars.HAL_STRUCT_ACRONYM || 'UGA' }}
+      NEXT_PUBLIC_INSTITUTION_NAME: ${{ vars.INSTITUTION_NAME || 'Université Grenoble Alpes' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      # Fichiers internes (export HAL + financements scanR). Non bloquant : ces
+      # données évoluent lentement ; si une source est momentanément indisponible,
+      # on conserve les CSV existants et on rafraîchit quand même les marts.
+      - name: Refresh internal files (non-blocking)
+        continue-on-error: true
+        run: npm run internal
+
+      - name: Rebuild data marts (ETL)
+        run: npm run pipeline
+
+      - name: Commit refreshed data if changed
+        run: |
+          if [ -n "$(git status --porcelain data/)" ]; then
+            git config user.name "uga-dashboard-bot"
+            git config user.email "actions@users.noreply.github.com"
+            git add data/
+            git commit -m "chore(data): rafraîchissement automatique des data marts (ETL planifié)"
+            git push
+            echo "Marts rafraîchis et poussés → Vercel va redéployer."
+          else
+            echo "Aucun changement de données — rien à committer."
+          fi

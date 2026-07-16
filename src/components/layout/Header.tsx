@@ -1,13 +1,23 @@
 import Image from "next/image";
 import { BookOpen, Compass } from "lucide-react";
-import { formatDate, formatInt } from "@/lib/format";
+import { formatInt } from "@/lib/format";
+import { fetchSourceTotals } from "@/lib/live-totals";
 import { ThemeToggle } from "./ThemeToggle";
 
 interface HeaderProps {
   institution: string;
-  generatedAt: string;
-  openAlexTotal: number;
-  halTotal: number;
+  /** Snapshot totals, used as fallback if a source API is unreachable at view time. */
+  fallbackTotals: { openAlex: number; hal: number };
+}
+
+/** Today's date, localized (fr-FR), pinned to Paris time — e.g. « 18 juin 2026 ». */
+function today(): string {
+  return new Date().toLocaleDateString("fr-FR", {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    timeZone: "Europe/Paris",
+  });
 }
 
 const ICONS = { notebooks: BookOpen, explore: Compass } as const;
@@ -25,8 +35,10 @@ const NAV: Array<{ href: string; label: string; icon?: keyof typeof ICONS }> = [
   { href: "/explore", label: "Navigateur d'API", icon: "explore" },
 ];
 
-/** Sticky institutional header: UGA logo, provenance badges and section nav. */
-export function Header({ institution, generatedAt, openAlexTotal, halTotal }: HeaderProps) {
+/** Sticky institutional header: UGA logo, provenance badges and section nav.
+ *  Source totals are re-checked live on every render; the date is today's. */
+export async function Header({ institution, fallbackTotals }: HeaderProps) {
+  const totals = await fetchSourceTotals(fallbackTotals);
   return (
     <header className="sticky top-0 z-30 bg-gradient-to-b from-brand-800 to-brand-900 text-white shadow-lg shadow-brand-900/20 print:hidden">
       {/* Liseré orange — rappel de l'accent du logo UGA. */}
@@ -68,15 +80,15 @@ export function Header({ institution, generatedAt, openAlexTotal, halTotal }: He
           <div className="flex flex-col items-end gap-2">
             <div className="flex flex-wrap items-center justify-end gap-2">
               <ThemeToggle />
-              <Badge>OpenAlex · {formatInt(openAlexTotal)}</Badge>
-              <Badge>HAL · {formatInt(halTotal)}</Badge>
+              <Badge>OpenAlex · {formatInt(totals.openAlex)}</Badge>
+              <Badge>HAL · {formatInt(totals.hal)}</Badge>
             </div>
             <p className="flex items-center gap-1.5 text-xs text-brand-100/60">
               <span className="relative flex h-1.5 w-1.5" aria-hidden="true">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400/70" />
                 <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-400" />
               </span>
-              Données réelles · instantané du {formatDate(generatedAt)}
+              Totaux en direct · {today()}
             </p>
           </div>
         </div>
